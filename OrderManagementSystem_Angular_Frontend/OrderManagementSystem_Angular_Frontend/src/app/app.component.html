@@ -1,0 +1,118 @@
+<main class="page">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">SPRING BOOT + ANGULAR</p>
+      <h1>Order Management System</h1>
+      <p class="subtitle">Create and manage customer orders and their items.</p>
+    </div>
+    <span class="api-status">API: localhost:8080</span>
+  </header>
+
+  <div *ngIf="message" class="alert success">{{ message }}</div>
+  <div *ngIf="errorMessage" class="alert error">{{ errorMessage }}</div>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>{{ isEditing ? 'Update Order' : 'Create New Order' }}</h2>
+        <p>Order data is sent to your Spring Boot REST API as JSON.</p>
+      </div>
+      <button *ngIf="isEditing" type="button" class="btn secondary" (click)="resetForm()">Cancel edit</button>
+    </div>
+
+    <form (ngSubmit)="saveOrder()" #orderForm="ngForm">
+      <div class="form-grid">
+        <label>
+          Customer name
+          <input name="customerName" [(ngModel)]="form.customerName" required placeholder="e.g. Janhavi Ingale">
+        </label>
+        <label>
+          Order date
+          <input name="orderDate" type="date" [(ngModel)]="form.orderDate">
+        </label>
+      </div>
+
+      <div class="items-heading">
+        <h3>Order details</h3>
+        <button type="button" class="btn secondary small" (click)="addDetail()">+ Add item</button>
+      </div>
+
+      <div class="item-row" *ngFor="let item of form.orderDetails; let i = index">
+        <label>
+          Product name
+          <input [name]="'productName' + i" [(ngModel)]="item.productName" required placeholder="Product name">
+        </label>
+        <label>
+          Quantity
+          <input [name]="'quantity' + i" type="number" min="1" [(ngModel)]="item.quantity" required>
+        </label>
+        <label>
+          Price (₹)
+          <input [name]="'price' + i" type="number" min="0.01" step="0.01" [(ngModel)]="item.price" required>
+        </label>
+        <button type="button" class="remove-btn" [disabled]="form.orderDetails.length === 1" (click)="removeDetail(i)" aria-label="Remove item">×</button>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn primary" type="submit" [disabled]="orderForm.invalid">
+          {{ isEditing ? 'Update order' : 'Save order' }}
+        </button>
+        <button class="btn secondary" type="button" (click)="resetForm()">Clear form</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-heading">
+      <div>
+        <h2>Orders</h2>
+        <p>{{ orders.length }} order(s) found</p>
+      </div>
+      <button class="btn secondary" type="button" (click)="loadOrders()">↻ Refresh</button>
+    </div>
+
+    <div *ngIf="loading" class="empty">Loading orders…</div>
+    <div *ngIf="!loading && orders.length === 0" class="empty">
+      No orders found. Create your first order using the form above.
+    </div>
+
+    <article class="order-card" *ngFor="let order of orders; trackBy: trackOrder">
+      <div class="order-top">
+        <div>
+          <span class="order-number">ORDER #{{ order.id }}</span>
+          <h3>{{ order.customerName }}</h3>
+          <p class="muted">Date: {{ order.orderDate || 'Not specified' }}</p>
+        </div>
+        <div class="order-total">
+          <span>Total</span>
+          <strong>₹{{ total(order) | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Product</th><th>Quantity</th><th>Price</th><th>Subtotal</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of order.orderDetails">
+              <td>{{ item.productName }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>₹{{ item.price | number:'1.2-2' }}</td>
+              <td>₹{{ item.quantity * item.price | number:'1.2-2' }}</td>
+              <td>
+                <button class="text-btn danger-text" type="button" *ngIf="item.id" (click)="removeSavedDetail(order, item.id)">Remove</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn secondary small" type="button" (click)="editOrder(order)">Edit order</button>
+        <button class="btn danger small" type="button" (click)="deleteOrder(order)">Delete order</button>
+      </div>
+    </article>
+  </section>
+  <footer>Angular UI · Spring Boot REST API · PostgreSQL</footer>
+</main>
